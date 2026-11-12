@@ -1,11 +1,13 @@
 (use strings after contains? escape-html find-from
              first-char? replace-all starts-with?)
 
-(export highlight)
+(export highlight-code)
 
 (defstruct token
   :class string
   :stop usize)
+
+(def knave-language "knave")
 
 (def result-arrow "=>")
 
@@ -23,6 +25,11 @@
 (def after-escaped-char
   (rust "{1} + 1 + {0}[{1} + 1..].chars().next().map_or(0, char::len_utf8)"
     (fn ((ref str) usize) usize)))
+
+(defn highlight-code (language code)
+  (if (= language knave-language)
+    (highlight code)
+    (escape-html code)))
 
 (defn highlight (code)
   (highlight-from code 0 (str "")))

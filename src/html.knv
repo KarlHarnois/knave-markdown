@@ -1,5 +1,5 @@
 (use blocks block)
-(use highlight highlight)
+(use highlight highlight-code)
 (use inlines render-inlines)
 (use strings escape-html join owned replace-all)
 
@@ -64,20 +64,13 @@
   (str "<pre><code class=\"language-"
        (escape-html language)
        "\">"
-       (in-line-spans (as-str (highlighted-code language code)))
+       (in-line-spans (as-str (highlight-code language code)))
        "</code></pre>"))
 
 (defn in-line-spans (text)
   (str "<span class=\"line\">"
        (replace-all text "\n" "\n</span><span class=\"line\">")
        "</span>"))
-
-(defn highlighted-code (language code)
-  (if (knave-code? language)
-    (highlight code)
-    (escape-html code)))
-
-(defn knave-code? (language) (= language "knave"))
 
 (defn render-list (tag items)
   (str "<" tag ">"
