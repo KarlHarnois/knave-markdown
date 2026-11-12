@@ -32,7 +32,7 @@
 (defn parse-from (source-lines index blocks)
   (cond
     ((>= index (len source-lines)) blocks)
-    ((blank? (as-str (at source-lines index)))
+    ((blank? (line-at source-lines index))
      (recur source-lines (+ index 1) blocks))
     (else (match (parse-block source-lines index)
             ((parsed next-block next-index)
@@ -40,7 +40,7 @@
              (recur source-lines next-index blocks))))))
 
 (defn parse-block (source-lines index)
-  (let (line (as-str (at source-lines index)))
+  (let (line (line-at source-lines index))
     (cond
       ((fence? line) (parse-fence source-lines index))
       ((anchored-heading? source-lines index)
@@ -51,9 +51,12 @@
       ((numbered-item? line) (parse-numbered source-lines index))
       (else (parse-paragraph source-lines index)))))
 
+(defn line-at (source-lines index)
+  (as-str (at source-lines index)))
+
 (defn run-end (source-lines start continues?)
   (if (and (< start (len source-lines))
-           (continues? (as-str (at source-lines start))))
+           (continues? (line-at source-lines start)))
     (recur source-lines (+ start 1) continues?)
     start))
 
@@ -61,8 +64,7 @@
   (let (content-start (+ index 1)
         close (run-end source-lines content-start not-fence?)
         content (lines-between source-lines content-start close))
-    (->parsed (block/code-block (fence-language (as-str (at source-lines
-                                                            index)))
+    (->parsed (block/code-block (fence-language (line-at source-lines index))
                                 (join (ref content) "\n"))
               (+ close 1))))
 
@@ -71,17 +73,17 @@
 
 (defn anchored-heading? (source-lines index)
   (let (heading-index (after-blank-lines source-lines (+ index 1)))
-    (and (anchor-line? (as-str (at source-lines index)))
+    (and (anchor-line? (line-at source-lines index))
          (< heading-index (len source-lines))
-         (heading? (as-str (at source-lines heading-index))))))
+         (heading? (line-at source-lines heading-index)))))
 
 (defn after-blank-lines (source-lines start)
   (run-end source-lines start blank?))
 
 (defn parse-anchored-heading (source-lines index)
-  (let (anchor (anchor-id (as-str (at source-lines index)))
+  (let (anchor (anchor-id (line-at source-lines index))
         heading-index (after-blank-lines source-lines (+ index 1)))
-    (heading-block (as-str (at source-lines heading-index))
+    (heading-block (line-at source-lines heading-index)
                    (some anchor)
                    heading-index)))
 
@@ -98,7 +100,7 @@
   (let (end (run-end source-lines index table-row?)
         after-delimiter (+ index 2)
         first-body-row (if (< after-delimiter end) after-delimiter end))
-    (->parsed (block/table (table-cells (as-str (at source-lines index)))
+    (->parsed (block/table (table-cells (line-at source-lines index))
                            (collect (map (iter (lines-between source-lines
                                                               first-body-row
                                                               end))
