@@ -1,0 +1,113 @@
+(use blocks block)
+(use highlight highlight-code)
+(use inlines render-inlines)
+(use strings escape-html join owned replace-all)
+
+(export render-blocks)
+
+(def chars-to-string
+  (rust "{0}.collect::<String>()"
+    (fn ((iterator char)) string)))
+
+(def percent-encode
+  (rust "{0}.bytes().map(|byte| Some(byte).filter(|kept| kept.is_ascii_alphanumeric() || b\"-._~\".contains(kept)).map_or_else(|| format!(\"%{{:02X}}\", byte), |kept| char::from(kept).to_string())).collect::<String>()"
+    (fn ((ref str)) string)))
+
+(defn render-blocks (blocks)
+  (render-each blocks render-block "\n"))
+
+(defn render-each (items render separator)
+  (join (ref (collect (map (iter items) render)))
+        separator))
+
+(defn render-block (current)
+  (match current
+    ((heading level text explicit-id)
+     (render-heading level
+                     (as-str text)
+                     (heading-id (as-str text) explicit-id)))
+    ((paragraph text)
+     (str "<p>" (render-inlines (as-str text)) "</p>"))
+    ((code-block language code)
+     (render-code (as-str language) (as-str code)))
+    ((bullet-list items) (render-list "ul" items))
+    ((numbered-list items) (render-list "ol" items))
+    ((table header rows) (render-table header rows))))
+
+(type heading-id
+  (fn ((ref str) (ref (option string)))
+    string))
+
+(defn heading-id (text explicit-id)
+  (match explicit-id
+    (none (slug text))
+    ((some explicit) (owned explicit))))
+
+(defn slug (text)
+  (let (lowered (lower-case text)
+        kept (chars-to-string (filter (chars (as-str lowered)) slug-char?)))
+    (replace-all (as-str kept) " " "-")))
+
+(defn slug-char? (c)
+  (or (alphanumeric? c)
+      (= c (char " "))
+      (= c (char "-"))))
+
+(defn render-heading (level text id)
+  (let (escaped-id (escape-html (as-str id))
+        title-id (str escaped-id "-title"))
+    (str "<h" level " id=\"" escaped-id
+         "\" aria-labelledby=\"" title-id "\">"
+         (anchor-link (as-str (percent-encode (as-str id))))
+         (heading-title (as-str title-id) text)
+         "</h" level ">")))
+
+(defn anchor-link (fragment)
+  (str "<a class=\"anchor\" href=\"#" fragment
+       "\" aria-label=\"Link to this section\">#</a>"))
+
+(defn heading-title (title-id text)
+  (str "<span id=\"" title-id "\">"
+       (render-inlines text)
+       "</span>"))
+
+(defn render-code (language code)
+  (str "<pre><code class=\"language-"
+       (escape-html language)
+       "\">"
+       (wrap-each-line (as-str (highlight-code language code)))
+       "</code></pre>"))
+
+(defn wrap-each-line (text)
+  (str "<span class=\"line\">"
+       (replace-all text "\n" "\n</span><span class=\"line\">")
+       "</span>"))
+
+(defn render-list (tag items)
+  (str "<" tag ">"
+       (render-each items render-item "")
+       "</" tag ">"))
+
+(defn render-item (item)
+  (str "<li>" (render-inlines (as-str item)) "</li>"))
+
+(defn render-table (header rows)
+  (str "<table><thead>"
+       (render-row "th" header)
+       "</thead><tbody>"
+       (render-each rows render-body-row "")
+       "</tbody></table>"))
+
+(defn render-body-row (row) (render-row "td" row))
+
+(defn render-row (tag cells)
+  (str "<tr>"
+       (render-each cells
+                    (fn (cell) (render-cell tag cell))
+                    "")
+       "</tr>"))
+
+(defn render-cell (tag cell)
+  (str "<" tag ">"
+       (render-inlines (as-str cell))
+       "</" tag ">"))

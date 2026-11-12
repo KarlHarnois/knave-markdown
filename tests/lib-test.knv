@@ -1,0 +1,51 @@
+(use lib render-markdown)
+(use strings contains?)
+
+(deftest renders-a-document-through-the-library
+  (assert (= (render-markdown "Some *text*.\n\n- one")
+             "<p>Some <em>text</em>.</p>\n<ul><li>one</li></ul>")))
+
+(deftest renders-empty-markdown-as-empty-html
+  (assert (= (render-markdown "") "")))
+
+(deftest reads-windows-line-endings
+  (assert (= (render-markdown "one\r\ntwo\r\n\r\nthree")
+             "<p>one two</p>\n<p>three</p>")))
+
+(deftest renders-inline-markup-inside-a-paragraph
+  (assert (= (render-markdown "**Bold**, *soft*, `code` and [a link](to.md).")
+             "<p><strong>Bold</strong>, <em>soft</em>, <code>code</code> and <a href=\"to.md\">a link</a>.</p>")))
+
+(deftest escapes-a-quote-in-a-link-target
+  (assert (= (render-markdown "[a](x\"y)")
+             "<p><a href=\"x&quot;y\">a</a></p>")))
+
+(deftest keeps-unclosed-inline-markers-as-text
+  (assert (= (render-markdown "*soft and [label")
+             "<p>*soft and [label</p>")))
+
+(deftest renders-the-deepest-heading-level
+  (assert (contains? (as-str (render-markdown "###### Deep"))
+                     "<h6 id=\"deep\"")))
+
+(deftest reads-seven-hashes-as-a-paragraph
+  (assert (= (render-markdown "####### Deep") "<p>####### Deep</p>")))
+
+(deftest reads-a-multi-digit-numbered-item
+  (assert (= (render-markdown "10. ten") "<ol><li>ten</li></ol>")))
+
+(deftest runs-an-unclosed-fence-to-the-end
+  (assert (= (render-markdown "```text\nopen")
+             "<pre><code class=\"language-text\"><span class=\"line\">open</span></code></pre>")))
+
+(deftest keeps-an-anchor-line-without-a-heading-as-text
+  (assert (= (render-markdown "<a id=\"x\"></a>\n\ntext")
+             "<p>&lt;a id=&quot;x&quot;&gt;&lt;/a&gt;</p>\n<p>text</p>")))
+
+(deftest highlights-special-forms-in-a-knave-block
+  (assert (contains? (as-str (render-markdown "```knave\n(let (x 1) x)\n```"))
+                     "<span class=\"special\">let</span>")))
+
+(deftest renders-inline-markup-inside-table-cells
+  (assert (contains? (as-str (render-markdown "| *A* |\n| --- |\n| [b](c) |"))
+                     "<th><em>A</em></th></tr></thead><tbody><tr><td><a href=\"c\">b</a></td>")))

@@ -1,0 +1,28 @@
+(use strings after before-first first-char? leading-count)
+
+(deftest takes-the-text-after-a-byte-offset
+  (assert (= (after "héllo" 3) "llo")))
+
+(deftest takes-nothing-after-the-final-offset
+  (assert (= (after "abc" 3) "")))
+
+(deftest stops-before-the-first-separator
+  (assert (= (before-first "a?b?c" "?") "a")))
+
+(deftest keeps-text-without-the-separator
+  (assert (= (before-first "abc" "?") "abc")))
+
+(deftest counts-only-the-leading-marks
+  (assert (= (leading-count "##a#" (char "#")) 2)))
+
+(deftest counts-no-marks-when-text-starts-differently
+  (assert (= (leading-count "a##" (char "#")) 0)))
+
+(deftest tests-the-first-character
+  (assert (first-char? "1a" digit?)))
+
+(deftest ignores-characters-after-the-first
+  (assert (not (first-char? "a1" digit?))))
+
+(deftest finds-no-first-character-in-empty-text
+  (assert (not (first-char? "" digit?))))

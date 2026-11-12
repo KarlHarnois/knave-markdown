@@ -1,0 +1,66 @@
+(export after before-first contains? ends-with? escape-html
+        find-any-from find-from first-char? join
+        leading-count owned replace-all starts-with?)
+
+(def starts-with?
+  (rust "{0}.starts_with({1})"
+    (fn ((ref str) (ref str)) bool)))
+
+(def ends-with?
+  (rust "{0}.ends_with({1})"
+    (fn ((ref str) (ref str)) bool)))
+
+(def contains?
+  (rust "{0}.contains({1})"
+    (fn ((ref str) (ref str)) bool)))
+
+(def find-from
+  (rust "{0}[{2}..].find({1}).map(|offset| offset + {2})"
+    (fn ((ref str) (ref str) usize)
+      (option usize))))
+
+(def find-any-from
+  (rust "{0}[{2}..].find(|c: char| {1}.contains(c)).map(|offset| offset + {2})"
+    (fn ((ref str) (ref str) usize)
+      (option usize))))
+
+(def replace-all
+  (rust "{0}.replace({1}, {2})"
+    (fn ((ref str) (ref str) (ref str))
+      string)))
+
+(def join
+  (rust "{0}.join({1})"
+    (fn ((ref (slice string)) (ref str))
+      string)))
+
+(defn after (text start)
+  (subs text start (len text)))
+
+(type before-first
+  (fn ((ref str) (ref str)) (ref str)))
+
+(defn before-first (text separator)
+  (match (find-from text separator 0)
+    (none text)
+    ((some found) (subs text 0 found))))
+
+(type owned (fn ((ref str)) string))
+
+(defn owned (text) (str text))
+
+(defn leading-count (text mark)
+  (count (take-while (chars text)
+           (fn (c) (= c mark)))))
+
+(defn first-char? (text test)
+  (any? (take (chars text) 1) test))
+
+(defn escape-html (text)
+  (-> (replace-all text "&" "&amp;")
+      (as-str)
+      (replace-all "<" "&lt;")
+      (as-str)
+      (replace-all ">" "&gt;")
+      (as-str)
+      (replace-all "\"" "&quot;")))

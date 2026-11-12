@@ -1,0 +1,132 @@
+(use strings after ends-with? escape-html find-any-from
+             find-from first-char? replace-all starts-with?)
+
+(export highlight-code)
+
+(defstruct token
+  :class (option string)
+  :stop usize)
+
+(def knave-language "knave")
+
+(def result-arrow "=>")
+
+(def special-forms
+  (vec "fn" "local" "let" "if" "cond" "match" "do" "loop"
+       "recur" "use" "export" "type" "try" "when" "unless"
+       "and" "or" "not" "struct" "enum" "impl" "trait"))
+
+(def word-terminators " \n\t\r()\";")
+
+(def string-stops "\\\"")
+
+(def after-escaped-char
+  (rust "{1} + 1 + {0}[{1} + 1..].chars().next().map_or(0, char::len_utf8)"
+    (fn ((ref str) usize) usize)))
+
+(defn highlight-code (language code)
+  (if (= language knave-language)
+    (highlight code)
+    (escape-html code)))
+
+(defn highlight (code)
+  (highlight-from code 0 (str "")))
+
+(type highlight-from
+  (fn ((ref str) usize string) string))
+
+(defn highlight-from (code start highlighted)
+  (if (>= start (len code))
+    highlighted
+    (let (next (next-token code start))
+      (push! highlighted
+             (as-str (render-token code start (ref next))))
+      (recur code (:stop next) highlighted))))
+
+(defn render-token (code start current)
+  (let (text (escape-html (subs code start (:stop current))))
+    (match (:class current)
+      (none text)
+      ((some class)
+       (class-span-per-line (as-str text) (as-str class))))))
+
+(defn class-span-per-line (text class)
+  (let (opening (str "<span class=\"" class "\">")
+        closing "</span>"
+        reopened (str closing "\n" opening))
+    (str opening
+         (replace-all text "\n" (as-str reopened))
+         closing)))
+
+(defn next-token (code start)
+  (let (rest (after code start))
+    (cond
+      ((starts-with? rest ";")
+       (->token (some (str "comment"))
+                (line-end code start)))
+      ((starts-with? rest "\"")
+       (->token (some (str "string"))
+                (string-end code (+ start 1))))
+      ((or (starts-with? rest "(") (starts-with? rest ")"))
+       (->token (some (str "paren"))
+                (+ start 1)))
+      ((first-char? rest code-whitespace?)
+       (->token none (whitespace-end code start)))
+      (else (word-token code start)))))
+
+(defn code-whitespace? (c)
+  (or (= c (char " "))
+      (= c (char "\n"))
+      (= c (char "\t"))
+      (= c (char "\r"))))
+
+(defn whitespace-end (code start)
+  (+ start
+     (count (take-while (chars (after code start)) code-whitespace?))))
+
+(defn line-end (code start)
+  (match (find-from code "\n" start)
+    (none (len code))
+    ((some newline) newline)))
+
+(defn string-end (code start)
+  (match (find-any-from code string-stops start)
+    (none (len code))
+    ((some stop)
+     (if (starts-with? (after code stop) "\"")
+       (+ stop 1)
+       (recur code (after-escaped-char code stop))))))
+
+(defn word-end (code start)
+  (unwrap-or (find-any-from code word-terminators start)
+             (len code)))
+
+(defn word-token (code start)
+  (let (end (word-end code start)
+        word (subs code start end))
+    (->token (if (form-head? code start)
+               (head-word-class word)
+               (word-class word))
+             end)))
+
+(defn form-head? (code start)
+  (ends-with? (subs code 0 start) "("))
+
+(defn head-word-class (word)
+  (if (definer? word)
+    (some (str "definer"))
+    (word-class word)))
+
+(defn word-class (word)
+  (cond
+    ((= word result-arrow) (some (str "result-arrow")))
+    ((starts-with? word ":") (some (str "keyword")))
+    ((first-char? word digit?) (some (str "number")))
+    ((special-form? word) (some (str "special")))
+    (else none)))
+
+(defn definer? (word) (starts-with? word "def"))
+
+(defn special-form? (word)
+  (any? (iter special-forms)
+    (fn (form) (= form word))))

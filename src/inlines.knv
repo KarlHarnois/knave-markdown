@@ -1,0 +1,111 @@
+(use strings after escape-html find-any-from find-from
+             leading-count owned starts-with?)
+
+(export render-inlines)
+
+(defstruct span
+  :markup string
+  :resume-at usize)
+
+(defstruct wrapper
+  :marker string
+  :tag string)
+
+(def inline-delimiters "`*[\\")
+
+(def ascii-punctuation-at?
+  (rust "{0}.as_bytes().get({1}).is_some_and(u8::is_ascii_punctuation)"
+    (fn ((ref str) usize) bool)))
+
+(defn render-inlines (text)
+  (render-from text 0 (str "")))
+
+(type render-from
+  (fn ((ref str) usize string) string))
+
+(defn render-from (text start rendered)
+  (match (find-any-from text inline-delimiters start)
+    (none (str rendered (escape-html (after text start))))
+    ((some at)
+     (let (rendered-span (render-span text at))
+       (push! rendered
+              (as-str (escape-html (subs text start at))))
+       (push! rendered (as-str (:markup rendered-span)))
+       (recur text (:resume-at rendered-span) rendered)))))
+
+(defn render-span (text at)
+  (let (rest (after text at))
+    (cond
+      ((starts-with? rest "\\") (render-escape text at))
+      ((starts-with? rest "`") (render-code-span text at))
+      ((starts-with? rest "**") (render-wrapped text at (strong)))
+      ((starts-with? rest "*") (render-emphasis text at))
+      (else (render-link text at)))))
+
+(defn render-escape (text at)
+  (let (escaped (+ at 1))
+    (if (ascii-punctuation-at? text escaped)
+      (->span (escape-html (subs text escaped (+ escaped 1)))
+              (+ escaped 1))
+      (->span (str "\\") escaped))))
+
+(defn render-code-span (text at)
+  (let (run (leading-count (after text at) (char "`"))
+        content-start (+ at run)
+        ticks (subs text at content-start))
+    (match (find-from text ticks content-start)
+      (none (->span (owned ticks) content-start))
+      ((some close)
+       (->span (str "<code>"
+                    (escape-html (trim (subs text content-start close)))
+                    "</code>")
+               (+ close run))))))
+
+(defn render-emphasis (text at)
+  (if (starts-with? (after text (+ at 1)) " ")
+    (->span (str "*") (+ at 1))
+    (render-wrapped text at (emphasis))))
+
+(defn strong ()
+  (->wrapper (str "**") (str "strong")))
+
+(defn emphasis ()
+  (->wrapper (str "*") (str "em")))
+
+(defn render-wrapped (text at wrapper)
+  (let (marker (as-str (:marker wrapper))
+        tag (as-str (:tag wrapper))
+        content-start (+ at (len marker)))
+    (match (find-from text marker content-start)
+      (none (->span (str marker) content-start))
+      ((some close)
+       (->span (str "<" tag ">"
+                    (render-inlines (subs text content-start close))
+                    "</" tag ">")
+               (+ close (len marker)))))))
+
+(defn render-link (text at)
+  (match (find-from text "](" at)
+    (none (plain-bracket at))
+    ((some label-end)
+     (if (bracket-free? text (+ at 1) label-end)
+       (render-link-target text at label-end)
+       (plain-bracket at)))))
+
+(defn plain-bracket (at)
+  (->span (str "[") (+ at 1)))
+
+(defn bracket-free? (text start end)
+  (none? (find-from (subs text start end) "]" 0)))
+
+(defn render-link-target (text at label-end)
+  (let (target-start (+ label-end 2))
+    (match (find-from text ")" target-start)
+      (none (plain-bracket at))
+      ((some target-end)
+       (->span (str "<a href=\""
+                    (escape-html (subs text target-start target-end))
+                    "\">"
+                    (render-inlines (subs text (+ at 1) label-end))
+                    "</a>")
+               (+ target-end 1))))))

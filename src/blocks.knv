@@ -1,0 +1,138 @@
+(use line-syntax anchor-id anchor-line? blank? bullet-item?
+                 bullet-text fence-language fence?
+                 heading-level heading-text heading?
+                 numbered-item? numbered-text table-cells
+                 table-row?)
+
+(use strings join owned)
+
+(export block parse-blocks)
+
+(defenum block
+  (heading usize string (option string))
+  (paragraph string)
+  (code-block string string)
+  (bullet-list (vec string))
+  (numbered-list (vec string))
+  (table (vec string) (vec (vec string))))
+
+(defstruct parsed
+  :block block
+  :next usize)
+
+(def lines-between
+  (rust "{0}[{1}..{2}].to_vec()"
+    (fn ((ref (slice string)) usize usize)
+      (vec string))))
+
+(defn parse-blocks (source)
+  (let (source-lines (collect (map (lines source) owned)))
+    (parse-from (ref source-lines) 0 (vec))))
+
+(defn parse-from (source-lines index blocks)
+  (cond
+    ((>= index (len source-lines)) blocks)
+    ((blank? (line-at source-lines index))
+     (recur source-lines (+ index 1) blocks))
+    (else (match (parse-block source-lines index)
+            ((parsed next-block next-index)
+             (push! blocks next-block)
+             (recur source-lines next-index blocks))))))
+
+(defn parse-block (source-lines index)
+  (let (line (line-at source-lines index))
+    (cond
+      ((fence? line) (parse-fence source-lines index))
+      ((anchored-heading? source-lines index)
+       (parse-anchored-heading source-lines index))
+      ((heading? line) (parse-heading line index))
+      ((table-row? line) (parse-table source-lines index))
+      ((bullet-item? line) (parse-bullets source-lines index))
+      ((numbered-item? line) (parse-numbered source-lines index))
+      (else (parse-paragraph source-lines index)))))
+
+(defn line-at (source-lines index)
+  (as-str (at source-lines index)))
+
+(defn run-end (source-lines start continues?)
+  (if (and (< start (len source-lines))
+           (continues? (line-at source-lines start)))
+    (recur source-lines (+ start 1) continues?)
+    start))
+
+(defn parse-fence (source-lines index)
+  (let (content-start (+ index 1)
+        close (run-end source-lines content-start not-fence?)
+        content (lines-between source-lines content-start close))
+    (->parsed (block/code-block (fence-language (line-at source-lines index))
+                                (join (ref content) "\n"))
+              (+ close 1))))
+
+(defn not-fence? (line)
+  (not (fence? line)))
+
+(defn anchored-heading? (source-lines index)
+  (let (heading-index (heading-after-anchor source-lines index))
+    (and (anchor-line? (line-at source-lines index))
+         (< heading-index (len source-lines))
+         (heading? (line-at source-lines heading-index)))))
+
+(defn heading-after-anchor (source-lines anchor-index)
+  (run-end source-lines (+ anchor-index 1) blank?))
+
+(defn parse-anchored-heading (source-lines index)
+  (let (explicit-id (anchor-id (line-at source-lines index))
+        heading-index (heading-after-anchor source-lines index))
+    (parsed-heading (line-at source-lines heading-index)
+                    (some explicit-id)
+                    heading-index)))
+
+(defn parse-heading (line index)
+  (parsed-heading line none index))
+
+(defn parsed-heading (line explicit-id index)
+  (->parsed (block/heading (heading-level line)
+                           (heading-text line)
+                           explicit-id)
+            (+ index 1)))
+
+(defn parse-table (source-lines index)
+  (let (end (run-end source-lines index table-row?)
+        after-delimiter (+ index 2)
+        first-body-row (min after-delimiter end))
+    (->parsed (block/table
+                (table-cells (line-at source-lines index))
+                (mapped-lines source-lines first-body-row end table-cells))
+              end)))
+
+(defn parse-bullets (source-lines index)
+  (let (end (run-end source-lines index bullet-item?))
+    (->parsed (block/bullet-list
+                (mapped-lines source-lines index end bullet-text))
+              end)))
+
+(defn parse-numbered (source-lines index)
+  (let (end (run-end source-lines index numbered-item?))
+    (->parsed (block/numbered-list
+                (mapped-lines source-lines index end numbered-text))
+              end)))
+
+(defn mapped-lines (source-lines start end transform)
+  (collect (map (iter (lines-between source-lines start end))
+             (fn (line) (transform (as-str line))))))
+
+(defn parse-paragraph (source-lines index)
+  (let (end (run-end source-lines (+ index 1) paragraph-line?))
+    (->parsed (block/paragraph
+                (join (ref (lines-between source-lines index end)) " "))
+              end)))
+
+(defn paragraph-line? (line)
+  (not (or (blank? line) (block-start? line))))
+
+(defn block-start? (line)
+  (or (fence? line)
+      (heading? line)
+      (table-row? line)
+      (bullet-item? line)
+      (numbered-item? line)))

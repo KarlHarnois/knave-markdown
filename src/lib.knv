@@ -1,0 +1,10 @@
+(module "Renders a subset of markdown to HTML.")
+
+(use blocks parse-blocks)
+(use html render-blocks)
+
+(export render-markdown)
+
+(defn render-markdown (source)
+  (let (blocks (parse-blocks source))
+    (render-blocks (ref blocks))))
