@@ -75,10 +75,10 @@
   (str "<pre><code class=\"language-"
        (escape-html language)
        "\">"
-       (in-line-spans (as-str (highlight-code language code)))
+       (wrap-each-line (as-str (highlight-code language code)))
        "</code></pre>"))
 
-(defn in-line-spans (text)
+(defn wrap-each-line (text)
   (str "<span class=\"line\">"
        (replace-all text "\n" "\n</span><span class=\"line\">")
        "</span>"))

@@ -49,10 +49,10 @@
   (let (text (escape-html (subs code start (:stop current))))
     (if (empty? (:class current))
       text
-      (in-class-spans (as-str text)
-                      (as-str (:class current))))))
+      (class-span-per-line (as-str text)
+                           (as-str (:class current))))))
 
-(defn in-class-spans (text class)
+(defn class-span-per-line (text class)
   (let (opening (str "<span class=\"" class "\">")
         closing "</span>"
         reopened (str closing "\n" opening))
