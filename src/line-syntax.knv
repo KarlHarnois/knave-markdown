@@ -12,6 +12,8 @@
 
 (def numbered-marker ". ")
 
+(def pipe "|")
+
 (def escaped-pipe "\\|")
 
 (def pipe-placeholder "\u{E000}")
@@ -54,15 +56,15 @@
   (owned (before-first (after line (len anchor-opening))
                        anchor-closing)))
 
-(defn table-row? (line) (starts-with? line "|"))
+(defn table-row? (line) (starts-with? line pipe))
 
 (defn table-cells (row)
   (let (protected (replace-all row escaped-pipe pipe-placeholder))
-    (collect (map (split (without-outer-pipes (as-str protected)) "|")
+    (collect (map (split (without-outer-pipes (as-str protected)) pipe)
                   cell-text))))
 
 (defn cell-text (cell)
-  (replace-all (trim cell) pipe-placeholder "|"))
+  (replace-all (trim cell) pipe-placeholder pipe))
 
 (defn bullet-item? (line) (starts-with? line bullet-marker))
 
