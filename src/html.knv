@@ -22,10 +22,10 @@
 
 (defn render-block (current)
   (match current
-    ((heading level text anchor)
+    ((heading level text explicit-id)
      (render-heading level
                      (as-str text)
-                     (heading-anchor (as-str text) anchor)))
+                     (heading-id (as-str text) explicit-id)))
     ((paragraph text)
      (str "<p>" (render-inlines (as-str text)) "</p>"))
     ((code-block language code)
@@ -34,12 +34,12 @@
     ((numbered-list items) (render-list "ol" items))
     ((table header rows) (render-table header rows))))
 
-(type heading-anchor
+(type heading-id
   (fn ((ref str) (ref (option string)))
     string))
 
-(defn heading-anchor (text anchor)
-  (match anchor
+(defn heading-id (text explicit-id)
+  (match explicit-id
     (none (slug text))
     ((some explicit) (owned explicit))))
 

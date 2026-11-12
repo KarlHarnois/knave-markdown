@@ -81,19 +81,19 @@
   (run-end source-lines (+ anchor-index 1) blank?))
 
 (defn parse-anchored-heading (source-lines index)
-  (let (anchor (anchor-id (line-at source-lines index))
+  (let (explicit-id (anchor-id (line-at source-lines index))
         heading-index (heading-after-anchor source-lines index))
     (heading-block (line-at source-lines heading-index)
-                   (some anchor)
+                   (some explicit-id)
                    heading-index)))
 
 (defn parse-heading (line index)
   (heading-block line none index))
 
-(defn heading-block (line anchor index)
+(defn heading-block (line explicit-id index)
   (->parsed (block/heading (heading-level line)
                            (heading-text line)
-                           anchor)
+                           explicit-id)
             (+ index 1)))
 
 (defn parse-table (source-lines index)
