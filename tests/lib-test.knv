@@ -1,0 +1,5 @@
+(use lib render-markdown)
+
+(deftest renders-a-document-through-the-library
+  (assert (= (render-markdown "Some *text*.\n\n- one")
+             "<p>Some <em>text</em>.</p>\n<ul><li>one</li></ul>")))

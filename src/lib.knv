@@ -1,0 +1,5 @@
+(module "Renders a subset of markdown to HTML.")
+
+(use html render-markdown)
+
+(export render-markdown)
