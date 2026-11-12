@@ -50,15 +50,23 @@
       (= c (char " "))
       (= c (char "-"))))
 
-(defn render-heading (level text anchor)
-  (let (id (escape-html (as-str anchor))
-        fragment (percent-encode (as-str anchor)))
-    (str "<h" level " id=\"" id "\" aria-labelledby=\"" id
-         "-title\">" "<a class=\"anchor\" href=\"#" fragment
-         "\" aria-label=\"Link to this section\">#</a>"
-         "<span id=\"" id "-title\">"
-         (render-inlines text)
-         "</span>" "</h" level ">")))
+(defn render-heading (level text id)
+  (let (escaped-id (escape-html (as-str id))
+        title-id (str escaped-id "-title"))
+    (str "<h" level " id=\"" escaped-id
+         "\" aria-labelledby=\"" title-id "\">"
+         (anchor-link (as-str (percent-encode (as-str id))))
+         (heading-title (as-str title-id) text)
+         "</h" level ">")))
+
+(defn anchor-link (fragment)
+  (str "<a class=\"anchor\" href=\"#" fragment
+       "\" aria-label=\"Link to this section\">#</a>"))
+
+(defn heading-title (title-id text)
+  (str "<span id=\"" title-id "\">"
+       (render-inlines text)
+       "</span>"))
 
 (defn render-code (language code)
   (str "<pre><code class=\"language-"
