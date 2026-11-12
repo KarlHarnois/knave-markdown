@@ -14,8 +14,11 @@
     (fn ((ref str)) string)))
 
 (defn render-blocks (blocks)
-  (let (rendered (collect (map (iter blocks) render-block)))
-    (join (ref rendered) "\n")))
+  (render-each blocks render-block "\n"))
+
+(defn render-each (items render separator)
+  (join (ref (collect (map (iter items) render)))
+        separator))
 
 (defn render-block (current)
   (match current
@@ -82,8 +85,7 @@
 
 (defn render-list (tag items)
   (str "<" tag ">"
-       (join (ref (collect (map (iter items) render-item)))
-             "")
+       (render-each items render-item "")
        "</" tag ">"))
 
 (defn render-item (item)
@@ -93,17 +95,16 @@
   (str "<table><thead>"
        (render-row "th" header)
        "</thead><tbody>"
-       (join (ref (collect (map (iter rows) render-body-row)))
-             "")
+       (render-each rows render-body-row "")
        "</tbody></table>"))
 
 (defn render-body-row (row) (render-row "td" row))
 
 (defn render-row (tag cells)
   (str "<tr>"
-       (join (ref (collect (map (iter cells)
-                             (fn (cell) (render-cell tag cell)))))
-             "")
+       (render-each cells
+                    (fn (cell) (render-cell tag cell))
+                    "")
        "</tr>"))
 
 (defn render-cell (tag cell)
