@@ -1,5 +1,5 @@
-(use strings after contains? escape-html find-from
-             first-char? replace-all starts-with?)
+(use strings after escape-html find-from first-char?
+             replace-all starts-with?)
 
 (export highlight-code)
 
@@ -12,7 +12,9 @@
 (def result-arrow "=>")
 
 (def special-forms
-  " fn local let if cond match do loop recur use export type try when unless and or not struct enum impl trait ")
+  (vec "fn" "local" "let" "if" "cond" "match" "do" "loop"
+       "recur" "use" "export" "type" "try" "when" "unless"
+       "and" "or" "not" "struct" "enum" "impl" "trait"))
 
 (def word-end
   (rust "{0}[{1}..].find([' ', '\\n', '\\t', '\\r', '(', ')', '\"', ';']).map_or({0}.len(), |offset| offset + {1})"
@@ -115,4 +117,5 @@
 (defn definer? (word) (starts-with? word "def"))
 
 (defn special-form? (word)
-  (contains? special-forms (as-str (str " " word " "))))
+  (any? (iter special-forms)
+    (fn (form) (= form word))))
