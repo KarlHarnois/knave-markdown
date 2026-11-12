@@ -34,32 +34,19 @@ The call returns this HTML:
 
 ## Supported markdown
 
-The library renders this subset of markdown, not full CommonMark:
+A subset, not CommonMark:
 
-- Headings from `#` to `######`. An `<a id="..."></a>` line before a heading sets the heading's anchor.
-- Paragraphs.
-- Fenced code blocks.
-- Bullet lists with `- ` and numbered lists with `1. `.
-- Pipe tables. The second line of a table is its delimiter row, such as `| --- |`, and does not render. Write `\|` for a pipe inside a cell.
-- Inline code, `*emphasis*`, `**strong**`, `[links](target)` and backslash escapes.
+- Headings, optionally preceded by an `<a id="..."></a>` line that sets their anchor
+- Paragraphs and fenced code blocks
+- `- ` bullet lists and `1. ` numbered lists
+- Pipe tables with a `| --- |` delimiter row
+- Inline code, `*emphasis*`, `**strong**`, links and backslash escapes
 
 ## HTML output
 
-- A heading gets an `id`, an `<a class="anchor">` link to itself, and its text in a `<span id="<id>-title">`. The `id` is the explicit anchor, or a slug of the heading text.
-- A code block renders as `<pre><code class="language-<tag>">`, with each line in a `<span class="line">`.
-- A code block tagged `knave` gets Knave highlighting. Each highlighted token sits in a `<span>` whose class names its kind:
-  - `paren`
-  - `definer`
-  - `special`
-  - `keyword`
-  - `string`
-  - `number`
-  - `comment`
-  - `result-arrow`
-- A code block with any other tag renders as escaped text.
-- A table renders as a plain `<table>` with a `<thead>` and a `<tbody>`.
-
-**Render only markdown you trust.** The renderer escapes text but does not check link schemes, so a `javascript:` link target stays live in its `href`.
+- Headings get an `id` and an `<a class="anchor">` link to themselves.
+- Code blocks render as `<pre><code class="language-<tag>">`, with one `<span class="line">` per line.
+- `knave` code blocks get highlight spans such as `keyword`, `string` and `comment`.
 
 ## Develop
 
