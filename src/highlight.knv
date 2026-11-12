@@ -27,13 +27,16 @@
 (defn highlight (code)
   (highlight-from code 0 (str "")))
 
+(type highlight-from
+  (fn ((ref str) usize string) string))
+
 (defn highlight-from (code start highlighted)
   (if (>= start (len code))
     highlighted
     (let (next (next-token code start))
-      (recur code
-             (:stop next)
-             (str highlighted (render-token code start (ref next)))))))
+      (push! highlighted
+             (as-str (render-token code start (ref next))))
+      (recur code (:stop next) highlighted))))
 
 (defn render-token (code start current)
   (let (text (escape-html (subs code start (:stop current))))
