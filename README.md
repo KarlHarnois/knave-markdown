@@ -40,7 +40,7 @@ The library renders this subset of markdown, not full CommonMark:
 - Paragraphs.
 - Fenced code blocks.
 - Bullet lists with `- ` and numbered lists with `1. `.
-- Pipe tables. Write `\|` for a pipe inside a cell.
+- Pipe tables. The second line of a table is its delimiter row, such as `| --- |`, and does not render. Write `\|` for a pipe inside a cell.
 - Inline code, `*emphasis*`, `**strong**`, `[links](target)` and backslash escapes.
 
 ## HTML output
