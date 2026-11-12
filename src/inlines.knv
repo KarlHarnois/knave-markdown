@@ -35,7 +35,7 @@
   (let (rest (after text at))
     (cond
       ((starts-with? rest "\\") (render-escape text at))
-      ((starts-with? rest "`") (render-code text at))
+      ((starts-with? rest "`") (render-code-span text at))
       ((starts-with? rest "**")
        (render-wrapped text at "**" "strong"))
       ((starts-with? rest "*") (render-emphasis text at))
@@ -48,12 +48,12 @@
               (+ escaped 1))
       (->span (str "\\") escaped))))
 
-(defn render-code (text at)
+(defn render-code-span (text at)
   (let (run (leading-count (after text at) (char "`"))
         content-start (+ at run)
-        fence (subs text at content-start))
-    (match (find-from text fence content-start)
-      (none (->span (owned fence) content-start))
+        ticks (subs text at content-start))
+    (match (find-from text ticks content-start)
+      (none (->span (owned ticks) content-start))
       ((some close)
        (->span (str "<code>"
                     (escape-html (trim (subs text content-start close)))
