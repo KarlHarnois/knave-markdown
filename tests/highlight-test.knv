@@ -28,3 +28,7 @@
 
 (deftest escapes-code-in-another-language
   (assert (= (highlight-code "text" "(a <b>)") "(a &lt;b&gt;)")))
+
+(deftest leaves-a-def-word-outside-the-head-plain
+  (assert (= (highlight-code "knave" "(unwrap-or option default)")
+             "<span class=\"paren\">(</span>unwrap-or option default<span class=\"paren\">)</span>")))

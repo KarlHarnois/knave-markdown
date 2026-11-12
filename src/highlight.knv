@@ -1,5 +1,5 @@
-(use strings after escape-html find-any-from find-from
-             first-char? replace-all starts-with?)
+(use strings after ends-with? escape-html find-any-from
+             find-from first-char? replace-all starts-with?)
 
 (export highlight-code)
 
@@ -102,15 +102,26 @@
              (len code)))
 
 (defn word-token (code start)
-  (let (end (word-end code start))
-    (->token (word-class (subs code start end)) end)))
+  (let (end (word-end code start)
+        word (subs code start end))
+    (->token (if (form-head? code start)
+               (head-word-class word)
+               (word-class word))
+             end)))
+
+(defn form-head? (code start)
+  (ends-with? (subs code 0 start) "("))
+
+(defn head-word-class (word)
+  (if (definer? word)
+    (some (str "definer"))
+    (word-class word)))
 
 (defn word-class (word)
   (cond
     ((= word result-arrow) (some (str "result-arrow")))
     ((starts-with? word ":") (some (str "keyword")))
     ((first-char? word digit?) (some (str "number")))
-    ((definer? word) (some (str "definer")))
     ((special-form? word) (some (str "special")))
     (else none)))
 
