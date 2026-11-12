@@ -100,29 +100,26 @@
   (let (end (run-end source-lines index table-row?)
         after-delimiter (+ index 2)
         first-body-row (if (< after-delimiter end) after-delimiter end))
-    (->parsed (block/table (table-cells (line-at source-lines index))
-                           (collect (map (iter (lines-between source-lines
-                                                              first-body-row
-                                                              end))
-                                         row-cells)))
+    (->parsed (block/table
+                (table-cells (line-at source-lines index))
+                (mapped-lines source-lines first-body-row end table-cells))
               end)))
-
-(defn row-cells (row)
-  (table-cells (as-str row)))
 
 (defn parse-bullets (source-lines index)
   (let (end (run-end source-lines index bullet-item?))
     (->parsed (block/bullet-list
-                (collect (map (iter (lines-between source-lines index end))
-                              bullet-text)))
+                (mapped-lines source-lines index end bullet-text))
               end)))
 
 (defn parse-numbered (source-lines index)
   (let (end (run-end source-lines index numbered-item?))
     (->parsed (block/numbered-list
-                (collect (map (iter (lines-between source-lines index end))
-                              numbered-text)))
+                (mapped-lines source-lines index end numbered-text))
               end)))
+
+(defn mapped-lines (source-lines start end transform)
+  (collect (map (iter (lines-between source-lines start end))
+             (fn (line) (transform (as-str line))))))
 
 (defn parse-paragraph (source-lines index)
   (let (end (run-end source-lines (+ index 1) paragraph-line?))

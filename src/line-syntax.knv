@@ -65,8 +65,8 @@
 
 (defn bullet-item? (line) (starts-with? line bullet-marker))
 
-(defn bullet-text (item)
-  (owned (after (as-str item) (len bullet-marker))))
+(defn bullet-text (line)
+  (owned (after line (len bullet-marker))))
 
 (defn numbered-item? (line)
   (match (find-from line numbered-marker 0)
@@ -75,9 +75,8 @@
      (and (> dot 0)
           (every? (chars (subs line 0 dot)) digit?)))))
 
-(defn numbered-text (item)
-  (let (text (as-str item))
-    (match (find-from text numbered-marker 0)
-      (none (owned text))
-      ((some dot)
-       (owned (after text (+ dot (len numbered-marker))))))))
+(defn numbered-text (line)
+  (match (find-from line numbered-marker 0)
+    (none (owned line))
+    ((some dot)
+     (owned (after line (+ dot (len numbered-marker)))))))
