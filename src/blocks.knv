@@ -99,7 +99,7 @@
 (defn parse-table (source-lines index)
   (let (end (run-end source-lines index table-row?)
         after-delimiter (+ index 2)
-        first-body-row (if (< after-delimiter end) after-delimiter end))
+        first-body-row (min after-delimiter end))
     (->parsed (block/table
                 (table-cells (line-at source-lines index))
                 (mapped-lines source-lines first-body-row end table-cells))
