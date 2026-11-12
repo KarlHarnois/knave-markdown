@@ -2,7 +2,7 @@
 
 (deftest colors-a-definition
   (assert (= (highlight-code "knave" "(defn add)")
-             (as-str (str "<span class=\"paren\">(</span><span class=\"definer\">defn</span> add<span class=\"paren\">)</span>")))))
+             "<span class=\"paren\">(</span><span class=\"definer\">defn</span> add<span class=\"paren\">)</span>")))
 
 (deftest colors-a-whole-string-with-an-escaped-quote
   (assert (= (highlight-code "knave" "\"a\\\"b\"")

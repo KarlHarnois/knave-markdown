@@ -68,7 +68,7 @@
   (assert (contains? (as-str (render-markdown "<a id=\">=\"></a>\n## `>=`"))
                      "<h2 id=\"&gt;=\" aria-labelledby=\"&gt;=-title\"><a class=\"anchor\" href=\"#%3E%3D\"")))
 
-(deftest renders-a-top-heading-without-a-class
+(deftest renders-a-level-one-heading
   (assert (= (render-markdown "# Title")
              "<h1 id=\"title\" aria-labelledby=\"title-title\"><a class=\"anchor\" href=\"#title\" aria-label=\"Link to this section\">#</a><span id=\"title-title\">Title</span></h1>")))
 
