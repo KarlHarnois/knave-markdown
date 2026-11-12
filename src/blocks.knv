@@ -72,17 +72,17 @@
   (not (fence? line)))
 
 (defn anchored-heading? (source-lines index)
-  (let (heading-index (after-blank-lines source-lines (+ index 1)))
+  (let (heading-index (heading-after-anchor source-lines index))
     (and (anchor-line? (line-at source-lines index))
          (< heading-index (len source-lines))
          (heading? (line-at source-lines heading-index)))))
 
-(defn after-blank-lines (source-lines start)
-  (run-end source-lines start blank?))
+(defn heading-after-anchor (source-lines anchor-index)
+  (run-end source-lines (+ anchor-index 1) blank?))
 
 (defn parse-anchored-heading (source-lines index)
   (let (anchor (anchor-id (line-at source-lines index))
-        heading-index (after-blank-lines source-lines (+ index 1)))
+        heading-index (heading-after-anchor source-lines index))
     (heading-block (line-at source-lines heading-index)
                    (some anchor)
                    heading-index)))
