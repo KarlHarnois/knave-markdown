@@ -1,4 +1,4 @@
-(use html render-markdown)
+(use lib render-markdown)
 (use strings contains?)
 
 (deftest separates-blocks-at-blank-lines

@@ -1,15 +1,11 @@
-(use blocks block parse-blocks)
+(use blocks block)
 (use highlight highlight)
 (use inlines render-inlines)
 
 (use strings escape-html in-line-spans join owned
              percent-encode slug)
 
-(export render-markdown)
-
-(defn render-markdown (source)
-  (let (blocks (parse-blocks source))
-    (render-blocks (ref blocks))))
+(export render-blocks)
 
 (defn render-blocks (blocks)
   (let (rendered (collect (map (iter blocks) render-block)))
