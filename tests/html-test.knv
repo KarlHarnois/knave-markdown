@@ -75,3 +75,15 @@
 (deftest keeps-line-spans-nested-around-a-multiline-string
   (assert (= (render-markdown "```knave\n\"a\nb\"\n```")
              "<pre><code class=\"language-knave\"><span class=\"line\"><span class=\"string\">&quot;a</span>\n</span><span class=\"line\"><span class=\"string\">b&quot;</span></span></code></pre>")))
+
+(deftest slugs-a-heading-into-its-id
+  (assert (contains? (as-str (render-markdown "## Hello Big World"))
+                     "<h2 id=\"hello-big-world\"")))
+
+(deftest drops-punctuation-from-a-heading-id
+  (assert (contains? (as-str (render-markdown "## What's new-ish?"))
+                     "<h2 id=\"whats-new-ish\"")))
+
+(deftest keeps-non-ascii-letters-in-a-heading-id
+  (assert (contains? (as-str (render-markdown "## Café Noël"))
+                     "<h2 id=\"café-noël\"")))

@@ -1,11 +1,17 @@
 (use blocks block)
 (use highlight highlight)
 (use inlines render-inlines)
-
-(use strings escape-html in-line-spans join owned
-             percent-encode slug)
+(use strings escape-html join owned replace-all)
 
 (export render-blocks)
+
+(def chars-to-string
+  (rust "{0}.collect::<String>()"
+    (fn ((iterator char)) string)))
+
+(def percent-encode
+  (rust "{0}.bytes().map(|byte| Some(byte).filter(|kept| kept.is_ascii_alphanumeric() || b\"-._~\".contains(kept)).map_or_else(|| format!(\"%{{:02X}}\", byte), |kept| char::from(kept).to_string())).collect::<String>()"
+    (fn ((ref str)) string)))
 
 (defn render-blocks (blocks)
   (let (rendered (collect (map (iter blocks) render-block)))
@@ -34,6 +40,16 @@
     (none (slug text))
     ((some explicit) (owned explicit))))
 
+(defn slug (text)
+  (let (lowered (lower-case text)
+        kept (chars-to-string (filter (chars (as-str lowered)) slug-char?)))
+    (replace-all (as-str kept) " " "-")))
+
+(defn slug-char? (c)
+  (or (alphanumeric? c)
+      (= c (char " "))
+      (= c (char "-"))))
+
 (defn render-heading (level text anchor)
   (let (id (escape-html (as-str anchor))
         fragment (percent-encode (as-str anchor)))
@@ -50,6 +66,11 @@
        "\">"
        (in-line-spans (as-str (highlighted-code language code)))
        "</code></pre>"))
+
+(defn in-line-spans (text)
+  (str "<span class=\"line\">"
+       (replace-all text "\n" "\n</span><span class=\"line\">")
+       "</span>"))
 
 (defn highlighted-code (language code)
   (if (knave-code? language)

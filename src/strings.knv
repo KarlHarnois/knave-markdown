@@ -1,7 +1,6 @@
 (export after before contains? ends-with? escape-html
-        find-from first-char? in-line-spans join
-        leading-count owned percent-encode replace-all slug
-        starts-with?)
+        find-from first-char? join leading-count owned
+        replace-all starts-with?)
 
 (def starts-with?
   (rust "{0}.starts_with({1})"
@@ -30,14 +29,6 @@
     (fn ((ref (slice string)) (ref str))
       string)))
 
-(def chars-to-string
-  (rust "{0}.collect::<String>()"
-    (fn ((iterator char)) string)))
-
-(def percent-encode
-  (rust "{0}.bytes().map(|byte| Some(byte).filter(|kept| kept.is_ascii_alphanumeric() || b\"-._~\".contains(kept)).map_or_else(|| format!(\"%{{:02X}}\", byte), |kept| char::from(kept).to_string())).collect::<String>()"
-    (fn ((ref str)) string)))
-
 (defn after (text start)
   (subs text start (len text)))
 
@@ -60,16 +51,6 @@
 (defn first-char? (text test)
   (any? (take (chars text) 1) test))
 
-(defn slug (text)
-  (let (lowered (lower-case text)
-        kept (chars-to-string (filter (chars (as-str lowered)) slug-char?)))
-    (replace-all (as-str kept) " " "-")))
-
-(defn slug-char? (c)
-  (or (alphanumeric? c)
-      (= c (char " "))
-      (= c (char "-"))))
-
 (defn escape-html (text)
   (-> (replace-all text "&" "&amp;")
       (as-str)
@@ -78,8 +59,3 @@
       (replace-all ">" "&gt;")
       (as-str)
       (replace-all "\"" "&quot;")))
-
-(defn in-line-spans (text)
-  (str "<span class=\"line\">"
-       (replace-all text "\n" "\n</span><span class=\"line\">")
-       "</span>"))
