@@ -50,7 +50,7 @@ A subset, not CommonMark:
 
 ## Develop
 
-Run `direnv allow` once to load the [Nix](https://nixos.org/download/) dev shell, then use these commands:
+Run `direnv allow` once to load the [Nix](https://nixos.org/download/) dev shell. Then use these commands:
 
 ```sh
 knave test
