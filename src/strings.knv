@@ -1,4 +1,4 @@
-(export after before contains? ends-with? escape-html
+(export after before-first contains? ends-with? escape-html
         find-from first-char? join leading-count owned
         replace-all starts-with?)
 
@@ -32,10 +32,10 @@
 (defn after (text start)
   (subs text start (len text)))
 
-(type before
+(type before-first
   (fn ((ref str) (ref str)) (ref str)))
 
-(defn before (text separator)
+(defn before-first (text separator)
   (match (find-from text separator 0)
     (none text)
     ((some found) (subs text 0 found))))

@@ -1,4 +1,4 @@
-(use strings after before first-char? leading-count)
+(use strings after before-first first-char? leading-count)
 
 (deftest takes-the-text-after-a-byte-offset
   (assert (= (after "héllo" 3) "llo")))
@@ -7,10 +7,10 @@
   (assert (= (after "abc" 3) "")))
 
 (deftest stops-before-the-first-separator
-  (assert (= (before "a?b?c" "?") "a")))
+  (assert (= (before-first "a?b?c" "?") "a")))
 
 (deftest keeps-text-without-the-separator
-  (assert (= (before "abc" "?") "abc")))
+  (assert (= (before-first "abc" "?") "abc")))
 
 (deftest counts-only-the-leading-marks
   (assert (= (leading-count "##a#" (char "#")) 2)))

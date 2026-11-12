@@ -1,5 +1,5 @@
-(use strings after before ends-with? find-from leading-count
-             owned replace-all starts-with?)
+(use strings after before-first ends-with? find-from
+             leading-count owned replace-all starts-with?)
 
 (export anchor-id anchor-line? blank? bullet-item?
         bullet-text fence-language fence? heading-level
@@ -51,7 +51,8 @@
        (ends-with? line anchor-closing)))
 
 (defn anchor-id (line)
-  (owned (before (after line (len anchor-opening)) anchor-closing)))
+  (owned (before-first (after line (len anchor-opening))
+                       anchor-closing)))
 
 (defn table-row? (line) (starts-with? line "|"))
 
