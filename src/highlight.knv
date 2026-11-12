@@ -1,5 +1,5 @@
 (use strings after contains? escape-html find-from
-             first-char? starts-with?)
+             first-char? replace-all starts-with?)
 
 (export highlight)
 
@@ -42,7 +42,16 @@
   (let (text (escape-html (subs code start (:stop current))))
     (if (empty? (:class current))
       text
-      (str "<span class=\"" (:class current) "\">" text "</span>"))))
+      (in-class-spans (as-str text)
+                      (as-str (:class current))))))
+
+(defn in-class-spans (text class)
+  (let (opening (str "<span class=\"" class "\">")
+        closing "</span>"
+        reopened (str closing "\n" opening))
+    (str opening
+         (replace-all text "\n" (as-str reopened))
+         closing)))
 
 (defn next-token (code start)
   (let (rest (after code start))
