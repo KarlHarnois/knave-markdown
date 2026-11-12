@@ -47,7 +47,7 @@ The library renders this subset of markdown, not full CommonMark:
 
 - A heading gets an `id`, an `<a class="anchor">` link to itself, and its text in a `<span id="<id>-title">`. The `id` is the explicit anchor, or a slug of the heading text.
 - A code block renders as `<pre><code class="language-<tag>">`, with each line in a `<span class="line">`.
-- A code block tagged `knave`, `lisp` or `clojure` gets Knave highlighting. Each highlighted token sits in a `<span>` whose class names its kind:
+- A code block tagged `knave` gets Knave highlighting. Each highlighted token sits in a `<span>` whose class names its kind:
   - `paren`
   - `definer`
   - `special`
