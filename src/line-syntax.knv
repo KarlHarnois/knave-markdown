@@ -1,0 +1,87 @@
+(use strings after before ends-with? find-from leading-count
+             owned replace-all starts-with?)
+
+(export anchor-id anchor-line? blank? block-start?
+        bullet-item? bullet-text fence-language fence?
+        heading-level heading? numbered-item? numbered-text
+        table-cells table-row?)
+
+(def fence-marker "```")
+
+(def bullet-marker "- ")
+
+(def numbered-marker ". ")
+
+(def escaped-pipe "\\|")
+
+(def pipe-placeholder "\u{E000}")
+
+(def max-heading-level 6)
+
+(def anchor-opening "<a id=\"")
+
+(def anchor-closing "\"></a>")
+
+(def without-outer-pipes
+  (rust "{0}.trim().trim_start_matches('|').trim_end_matches('|')"
+    (fn ((ref str)) (ref str))))
+
+(defn blank? (line)
+  (empty? (trim line)))
+
+(defn block-start? (line)
+  (or (fence? line)
+      (heading? line)
+      (table-row? line)
+      (bullet-item? line)
+      (numbered-item? line)))
+
+(defn fence? (line) (starts-with? line fence-marker))
+
+(defn fence-language (line)
+  (owned (trim (after line (len fence-marker)))))
+
+(defn heading-level (line)
+  (leading-count line (char "#")))
+
+(defn heading? (line)
+  (let (level (heading-level line))
+    (and (> level 0)
+         (<= level max-heading-level)
+         (starts-with? (after line level) " "))))
+
+(defn anchor-line? (line)
+  (and (starts-with? line anchor-opening)
+       (ends-with? line anchor-closing)))
+
+(defn anchor-id (line)
+  (owned (before (after line (len anchor-opening)) anchor-closing)))
+
+(defn table-row? (line) (starts-with? line "|"))
+
+(defn table-cells (row)
+  (let (protected (replace-all row escaped-pipe pipe-placeholder))
+    (collect (map (split (without-outer-pipes (as-str protected)) "|")
+                  cell-text))))
+
+(defn cell-text (cell)
+  (replace-all (trim cell) pipe-placeholder "|"))
+
+(defn bullet-item? (line) (starts-with? line bullet-marker))
+
+(defn bullet-text (item)
+  (owned (after (as-str item) (len bullet-marker))))
+
+(defn numbered-item? (line)
+  (match (find-from line numbered-marker 0)
+    (none false)
+    ((some dot)
+     (and (> dot 0)
+          (every? (chars (subs line 0 dot)) digit?)))))
+
+(defn numbered-text (item)
+  (let (text (as-str item))
+    (match (find-from text numbered-marker 0)
+      (none (owned text))
+      ((some dot)
+       (owned (after text (+ dot (len numbered-marker))))))))
