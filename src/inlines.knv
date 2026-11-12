@@ -7,6 +7,10 @@
   :markup string
   :resume-at usize)
 
+(defstruct wrapper
+  :marker string
+  :tag string)
+
 (def next-delimiter
   (rust "{0}[{1}..].find(['`', '*', '[', '\\\\']).map(|offset| offset + {1})"
     (fn ((ref str) usize) (option usize))))
@@ -36,8 +40,7 @@
     (cond
       ((starts-with? rest "\\") (render-escape text at))
       ((starts-with? rest "`") (render-code-span text at))
-      ((starts-with? rest "**")
-       (render-wrapped text at "**" "strong"))
+      ((starts-with? rest "**") (render-wrapped text at (strong)))
       ((starts-with? rest "*") (render-emphasis text at))
       (else (render-link text at)))))
 
@@ -63,10 +66,18 @@
 (defn render-emphasis (text at)
   (if (starts-with? (after text (+ at 1)) " ")
     (->span (str "*") (+ at 1))
-    (render-wrapped text at "*" "em")))
+    (render-wrapped text at (emphasis))))
 
-(defn render-wrapped (text at marker tag)
-  (let (content-start (+ at (len marker)))
+(defn strong ()
+  (->wrapper (str "**") (str "strong")))
+
+(defn emphasis ()
+  (->wrapper (str "*") (str "em")))
+
+(defn render-wrapped (text at wrapper)
+  (let (marker (as-str (:marker wrapper))
+        tag (as-str (:tag wrapper))
+        content-start (+ at (len marker)))
     (match (find-from text marker content-start)
       (none (->span (str marker) content-start))
       ((some close)
