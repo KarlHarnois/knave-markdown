@@ -18,16 +18,18 @@
 (defn render-inlines (text)
   (render-from text 0 (str "")))
 
+(type render-from
+  (fn ((ref str) usize string) string))
+
 (defn render-from (text start rendered)
   (match (next-delimiter text start)
     (none (str rendered (escape-html (after text start))))
     ((some at)
      (let (rendered-span (render-span text at))
-       (recur text
-              (:resume-at rendered-span)
-              (str rendered
-                   (escape-html (subs text start at))
-                   (:markup rendered-span)))))))
+       (push! rendered
+              (as-str (escape-html (subs text start at))))
+       (push! rendered (as-str (:markup rendered-span)))
+       (recur text (:resume-at rendered-span) rendered)))))
 
 (defn render-span (text at)
   (let (rest (after text at))
