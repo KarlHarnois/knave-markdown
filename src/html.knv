@@ -29,9 +29,6 @@
     ((numbered-list items) (render-list "ol" items))
     ((table header rows) (render-table header rows))))
 
-(defn heading-class (level)
-  (if (= level 1) " class=\"type-title\"" ""))
-
 (type heading-anchor
   (fn ((ref str) (ref (option string)))
     string))
@@ -44,10 +41,8 @@
 (defn render-heading (level text anchor)
   (let (id (escape-html (as-str anchor))
         fragment (percent-encode (as-str anchor)))
-    (str "<h" level
-         (heading-class level)
-         " id=\"" id "\" aria-labelledby=\"" id "-title\">"
-         "<a class=\"anchor\" href=\"#" fragment
+    (str "<h" level " id=\"" id "\" aria-labelledby=\"" id
+         "-title\">" "<a class=\"anchor\" href=\"#" fragment
          "\" aria-label=\"Link to this section\">#</a>"
          "<span id=\"" id "-title\">"
          (render-inlines text)
@@ -80,12 +75,12 @@
   (str "<li>" (render-inlines (as-str item)) "</li>"))
 
 (defn render-table (header rows)
-  (str "<div class=\"table-scroll\"><table><thead>"
+  (str "<table><thead>"
        (render-row "th" header)
        "</thead><tbody>"
        (join (ref (collect (map (iter rows) render-body-row)))
              "")
-       "</tbody></table></div>"))
+       "</tbody></table>"))
 
 (defn render-body-row (row) (render-row "td" row))
 

@@ -38,7 +38,7 @@
 
 (deftest renders-a-table-without-its-delimiter-row
   (assert (= (render-markdown "| A |\n| --- |\n| b |")
-             "<div class=\"table-scroll\"><table><thead><tr><th>A</th></tr></thead><tbody><tr><td>b</td></tr></tbody></table></div>")))
+             "<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>b</td></tr></tbody></table>")))
 
 (deftest escapes-a-plain-code-block
   (assert (= (render-markdown "```text\n<a>\n```")
@@ -67,3 +67,7 @@
 (deftest escapes-an-explicit-operator-anchor
   (assert (contains? (as-str (render-markdown "<a id=\">=\"></a>\n## `>=`"))
                      "<h2 id=\"&gt;=\" aria-labelledby=\"&gt;=-title\"><a class=\"anchor\" href=\"#%3E%3D\"")))
+
+(deftest renders-a-top-heading-without-a-class
+  (assert (= (render-markdown "# Title")
+             "<h1 id=\"title\" aria-labelledby=\"title-title\"><a class=\"anchor\" href=\"#title\" aria-label=\"Link to this section\">#</a><span id=\"title-title\">Title</span></h1>")))
