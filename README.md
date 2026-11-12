@@ -59,6 +59,8 @@ The library renders this subset of markdown, not full CommonMark:
 - A code block with any other tag renders as escaped text.
 - A table renders as a plain `<table>` with a `<thead>` and a `<tbody>`.
 
+**Render only markdown you trust.** The renderer escapes text but does not check link schemes, so a `javascript:` link target stays live in its `href`.
+
 ## Develop
 
 Run `direnv allow` once to load the [Nix](https://nixos.org/download/) dev shell, then use these commands:
