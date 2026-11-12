@@ -4,7 +4,7 @@
 (export highlight-code)
 
 (defstruct token
-  :class string
+  :class (option string)
   :stop usize)
 
 (def knave-language "knave")
@@ -47,10 +47,10 @@
 
 (defn render-token (code start current)
   (let (text (escape-html (subs code start (:stop current))))
-    (if (empty? (:class current))
-      text
-      (class-span-per-line (as-str text)
-                           (as-str (:class current))))))
+    (match (:class current)
+      (none text)
+      ((some class)
+       (class-span-per-line (as-str text) (as-str class))))))
 
 (defn class-span-per-line (text class)
   (let (opening (str "<span class=\"" class "\">")
@@ -64,14 +64,16 @@
   (let (rest (after code start))
     (cond
       ((starts-with? rest ";")
-       (->token (str "comment") (line-end code start)))
+       (->token (some (str "comment"))
+                (line-end code start)))
       ((starts-with? rest "\"")
-       (->token (str "string")
+       (->token (some (str "string"))
                 (string-end code (+ start 1))))
       ((or (starts-with? rest "(") (starts-with? rest ")"))
-       (->token (str "paren") (+ start 1)))
+       (->token (some (str "paren"))
+                (+ start 1)))
       ((first-char? rest code-whitespace?)
-       (->token (str "") (whitespace-end code start)))
+       (->token none (whitespace-end code start)))
       (else (word-token code start)))))
 
 (defn code-whitespace? (c)
@@ -103,12 +105,12 @@
 
 (defn word-class (word)
   (cond
-    ((= word result-arrow) (str "result-arrow"))
-    ((starts-with? word ":") (str "keyword"))
-    ((first-char? word digit?) (str "number"))
-    ((definer? word) (str "definer"))
-    ((special-form? word) (str "special"))
-    (else (str ""))))
+    ((= word result-arrow) (some (str "result-arrow")))
+    ((starts-with? word ":") (some (str "keyword")))
+    ((first-char? word digit?) (some (str "number")))
+    ((definer? word) (some (str "definer")))
+    ((special-form? word) (some (str "special")))
+    (else none)))
 
 (defn definer? (word) (starts-with? word "def"))
 
