@@ -76,21 +76,23 @@
                (+ close (len marker)))))))
 
 (defn render-link (text at)
-  (let (plain-bracket (->span (str "[") (+ at 1)))
-    (match (find-from text "](" at)
-      (none plain-bracket)
-      ((some label-end)
-       (if (bracket-free? text (+ at 1) label-end)
-         (render-link-target text at label-end plain-bracket)
-         plain-bracket)))))
+  (match (find-from text "](" at)
+    (none (plain-bracket at))
+    ((some label-end)
+     (if (bracket-free? text (+ at 1) label-end)
+       (render-link-target text at label-end)
+       (plain-bracket at)))))
+
+(defn plain-bracket (at)
+  (->span (str "[") (+ at 1)))
 
 (defn bracket-free? (text start end)
   (none? (find-from (subs text start end) "]" 0)))
 
-(defn render-link-target (text at label-end plain-bracket)
+(defn render-link-target (text at label-end)
   (let (target-start (+ label-end 2))
     (match (find-from text ")" target-start)
-      (none plain-bracket)
+      (none (plain-bracket at))
       ((some target-end)
        (->span (str "<a href=\""
                     (escape-html (subs text target-start target-end))
