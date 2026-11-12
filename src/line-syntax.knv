@@ -1,9 +1,9 @@
 (use strings after before ends-with? find-from leading-count
              owned replace-all starts-with?)
 
-(export anchor-id anchor-line? blank? block-start?
-        bullet-item? bullet-text fence-language fence?
-        heading-level heading? numbered-item? numbered-text
+(export anchor-id anchor-line? blank? bullet-item?
+        bullet-text fence-language fence? heading-level
+        heading-text heading? numbered-item? numbered-text
         table-cells table-row?)
 
 (def fence-marker "```")
@@ -29,13 +29,6 @@
 (defn blank? (line)
   (empty? (trim line)))
 
-(defn block-start? (line)
-  (or (fence? line)
-      (heading? line)
-      (table-row? line)
-      (bullet-item? line)
-      (numbered-item? line)))
-
 (defn fence? (line) (starts-with? line fence-marker))
 
 (defn fence-language (line)
@@ -43,6 +36,9 @@
 
 (defn heading-level (line)
   (leading-count line (char "#")))
+
+(defn heading-text (line)
+  (owned (trim (after line (heading-level line)))))
 
 (defn heading? (line)
   (let (level (heading-level line))

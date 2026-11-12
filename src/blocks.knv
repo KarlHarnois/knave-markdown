@@ -1,10 +1,10 @@
-(use line-syntax anchor-id anchor-line? blank? block-start?
-                 bullet-item? bullet-text fence-language
-                 fence? heading-level heading?
+(use line-syntax anchor-id anchor-line? blank? bullet-item?
+                 bullet-text fence-language fence?
+                 heading-level heading-text heading?
                  numbered-item? numbered-text table-cells
                  table-row?)
 
-(use strings after join owned)
+(use strings join owned)
 
 (export block parse-blocks)
 
@@ -89,11 +89,10 @@
   (heading-block line none index))
 
 (defn heading-block (line anchor index)
-  (let (level (heading-level line))
-    (->parsed (block/heading level
-                             (owned (trim (after line level)))
-                             anchor)
-              (+ index 1))))
+  (->parsed (block/heading (heading-level line)
+                           (heading-text line)
+                           anchor)
+            (+ index 1)))
 
 (defn parse-table (source-lines index)
   (let (end (run-end source-lines index table-row?)
@@ -131,3 +130,10 @@
 
 (defn paragraph-line? (line)
   (not (or (blank? line) (block-start? line))))
+
+(defn block-start? (line)
+  (or (fence? line)
+      (heading? line)
+      (table-row? line)
+      (bullet-item? line)
+      (numbered-item? line)))
