@@ -1,3 +1,6 @@
+(module
+  "Highlights Knave code in fenced code blocks.")
+
 (use strings after ends-with? escape-html find-any-from
              find-from first-char? replace-all starts-with?)
 
@@ -25,6 +28,7 @@
     (fn ((ref str) usize) usize)))
 
 (defn highlight-code (language code)
+  "Highlights `knave` code and escapes any other language."
   (if (= language knave-language)
     (highlight code)
     (escape-html code)))

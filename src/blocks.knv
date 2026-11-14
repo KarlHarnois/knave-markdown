@@ -1,3 +1,6 @@
+(module
+  "Groups markdown source into blocks.")
+
 (use line-syntax anchor-id anchor-line? blank? bullet-item?
                  bullet-text fence-language fence?
                  heading-level heading-text heading?
@@ -9,6 +12,7 @@
 (export block parse-blocks)
 
 (defenum block
+  "A block of markdown: a heading, paragraph, code block, list or table."
   (heading usize string (option string))
   (paragraph string)
   (code-block string string)
@@ -26,6 +30,7 @@
       (vec string))))
 
 (defn parse-blocks (source)
+  "Groups source lines into blocks."
   (let (source-lines (collect (map (lines source) owned)))
     (parse-from (ref source-lines) 0 (vec))))
 

@@ -16,7 +16,16 @@ jobs:
       - uses: ./.github/actions/dev-shell
       - name: Check formatting
         run: nix develop -c knave fmt --check
+      - name: Run the linter
+        run: |
+          nix develop -c knave lint src/lib.knv
+          nix develop -c knave lint tasks/file-lengths.knv
       - name: Check that no .knv file is longer than 150 lines
         run: nix develop -c knave task check-file-lengths
+      - name: Check that the API docs are current
+        run: |
+          nix develop -c knave doc --write
+          git add --all -- doc
+          git diff --cached --exit-code -- doc
       - name: Run tests
         run: nix develop -c knave test

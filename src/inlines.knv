@@ -1,3 +1,6 @@
+(module
+  "Renders inline markdown to HTML.")
+
 (use strings after escape-html find-any-from find-from
              leading-count owned starts-with?)
 
@@ -18,6 +21,7 @@
     (fn ((ref str) usize) bool)))
 
 (defn render-inlines (text)
+  "Renders code spans, emphasis, strong text, links and escapes."
   (render-from text 0 (str "")))
 
 (type render-from

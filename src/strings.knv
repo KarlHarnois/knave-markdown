@@ -1,62 +1,79 @@
+(module
+  "String helpers over shared and owned text.")
+
 (export after before-first contains? ends-with? escape-html
         find-any-from find-from first-char? join
         leading-count owned replace-all starts-with?)
 
 (def starts-with?
+  "True when `text` starts with `prefix`."
   (rust "{0}.starts_with({1})"
     (fn ((ref str) (ref str)) bool)))
 
 (def ends-with?
+  "True when `text` ends with `suffix`."
   (rust "{0}.ends_with({1})"
     (fn ((ref str) (ref str)) bool)))
 
 (def contains?
+  "True when `text` contains `part`."
   (rust "{0}.contains({1})"
     (fn ((ref str) (ref str)) bool)))
 
 (def find-from
+  "Returns the first position of `part` at or after `start`."
   (rust "{0}[{2}..].find({1}).map(|offset| offset + {2})"
     (fn ((ref str) (ref str) usize)
       (option usize))))
 
 (def find-any-from
+  "Returns the first position at or after `start` that holds a mark."
   (rust "{0}[{2}..].find(|c: char| {1}.contains(c)).map(|offset| offset + {2})"
     (fn ((ref str) (ref str) usize)
       (option usize))))
 
 (def replace-all
+  "Replaces every `part` in `text` with `replacement`."
   (rust "{0}.replace({1}, {2})"
     (fn ((ref str) (ref str) (ref str))
       string)))
 
 (def join
+  "Joins `parts` with `separator`."
   (rust "{0}.join({1})"
     (fn ((ref (slice string)) (ref str))
       string)))
 
 (defn after (text start)
+  "Returns the part of `text` from `start`."
   (subs text start (len text)))
 
 (type before-first
   (fn ((ref str) (ref str)) (ref str)))
 
 (defn before-first (text separator)
+  "Returns the part of `text` before the first `separator`."
   (match (find-from text separator 0)
     (none text)
     ((some found) (subs text 0 found))))
 
 (type owned (fn ((ref str)) string))
 
-(defn owned (text) (str text))
+(defn owned (text)
+  "Copies `text` into an owned string."
+  (str text))
 
 (defn leading-count (text mark)
+  "Counts the leading `mark` characters in `text`."
   (count (take-while (chars text)
            (fn (c) (= c mark)))))
 
 (defn first-char? (text test)
+  "True when the first character of `text` passes `test`."
   (any? (take (chars text) 1) test))
 
 (defn escape-html (text)
+  "Escapes `&`, `<`, `>` and quotes for HTML."
   (-> (replace-all text "&" "&amp;")
       (as-str)
       (replace-all "<" "&lt;")

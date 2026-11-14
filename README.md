@@ -1,7 +1,7 @@
 # knave-markdown
 
 [![CI](https://github.com/KarlHarnois/knave-markdown/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/KarlHarnois/knave-markdown/actions/workflows/ci.yml)
-[![Knave v0.14.21](https://img.shields.io/badge/knave-v0.14.21-blue.svg)](https://github.com/knave-lang/knave/releases/tag/v0.14.21)
+[![Knave v0.15.0](https://img.shields.io/badge/knave-v0.15.0-blue.svg)](https://github.com/knave-lang/knave/releases/tag/v0.15.0)
 [![Nix flake](https://img.shields.io/badge/nix-flake-5277C3.svg?logo=nixos&logoColor=white)](flake.nix)
 
 A [Knave](https://github.com/knave-lang/knave) library that renders a subset of markdown to HTML.
@@ -48,6 +48,11 @@ A subset, not CommonMark:
 - Code blocks render as `<pre><code class="language-<tag>">`, with one `<span class="line">` per line.
 - `knave` code blocks get highlight spans such as `keyword`, `string` and `comment`.
 
+## API docs
+
+The pages in [`doc/`](doc/lib.md) are generated from the source docstrings by
+`knave doc --write`.
+
 ## Develop
 
 Run `direnv allow` once to load the [Nix](https://nixos.org/download/) dev shell. Then use these commands:
@@ -55,5 +60,10 @@ Run `direnv allow` once to load the [Nix](https://nixos.org/download/) dev shell
 ```sh
 knave test
 knave fmt
+knave lint src/lib.knv
+knave lint tasks/file-lengths.knv
 knave task check-file-lengths
+knave doc --write
 ```
+
+CI runs the same commands and checks that `doc/` is up to date.

@@ -1,4 +1,5 @@
-(module "Renders a subset of markdown to HTML.")
+(module
+  "Renders a subset of markdown to HTML.")
 
 (use blocks parse-blocks)
 (use html render-blocks)
@@ -6,5 +7,13 @@
 (export render-markdown)
 
 (defn render-markdown (source)
+  "Renders a subset of markdown to HTML.
+
+  ```knave
+  (render-markdown \"# Install\")
+  ```
+
+  Headings get an `id` and an anchor link, and `knave` code blocks are
+  highlighted."
   (let (blocks (parse-blocks source))
     (render-blocks (ref blocks))))

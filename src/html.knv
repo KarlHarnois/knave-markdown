@@ -1,3 +1,6 @@
+(module
+  "Renders markdown blocks as HTML.")
+
 (use blocks block)
 (use highlight highlight-code)
 (use inlines render-inlines)
@@ -14,6 +17,7 @@
     (fn ((ref str)) string)))
 
 (defn render-blocks (blocks)
+  "Renders each block and joins them with newlines."
   (render-each blocks render-block "\n"))
 
 (defn render-each (items render separator)
