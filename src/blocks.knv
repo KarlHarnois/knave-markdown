@@ -9,7 +9,7 @@
 (export block parse-blocks)
 
 (defenum block
-  (heading usize string (option string))
+  (heading int string (option string))
   (paragraph string)
   (code-block string string)
   (bullet-list (vec string))
@@ -18,11 +18,11 @@
 
 (defstruct parsed
   :block block
-  :next usize)
+  :next int)
 
 (def lines-between
-  (rust "{0}[{1}..{2}].to_vec()"
-    (fn ((ref (slice string)) usize usize)
+  (rust "{0}[{1} as usize..{2} as usize].to_vec()"
+    (fn ((ref (slice string)) int int)
       (vec string))))
 
 (defn parse-blocks (source)

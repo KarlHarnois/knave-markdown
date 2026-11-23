@@ -1,1 +1,1 @@
-(defproject knave-markdown)
+(defproject knave-markdown :knave "0.21.0")

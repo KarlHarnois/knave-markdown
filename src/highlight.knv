@@ -5,7 +5,7 @@
 
 (defstruct token
   :class (option string)
-  :stop usize)
+  :stop int)
 
 (def knave-language "knave")
 
@@ -21,8 +21,8 @@
 (def string-stops "\\\"")
 
 (def after-escaped-char
-  (rust "{1} + 1 + {0}[{1} + 1..].chars().next().map_or(0, char::len_utf8)"
-    (fn ((ref str) usize) usize)))
+  (rust "{1} + 1 + {0}[{1} as usize + 1..].chars().next().map_or(0, |c| c.len_utf8() as i64)"
+    (fn ((ref str) int) int)))
 
 (defn highlight-code (language code)
   (if (= language knave-language)
@@ -33,7 +33,7 @@
   (highlight-from code 0 (str "")))
 
 (type highlight-from
-  (fn ((ref str) usize string) string))
+  (fn ((ref str) int string) string))
 
 (defn highlight-from (code start highlighted)
   (if (>= start (len code))
