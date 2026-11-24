@@ -1,4 +1,5 @@
-(module "Renders a subset of markdown to HTML.")
+(module
+  "Renders a subset of markdown to HTML.")
 
 (use blocks parse-blocks)
 (use html render-blocks)

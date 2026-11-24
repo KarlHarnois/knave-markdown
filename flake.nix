@@ -2,7 +2,7 @@
   description = "knave-markdown, a markdown to HTML renderer";
 
   inputs = {
-    knave.url = "github:knave-lang/knave/v0.14.21";
+    knave.url = "github:knave-lang/knave/v0.21.2";
     nixpkgs.follows = "knave/nixpkgs";
   };
 
